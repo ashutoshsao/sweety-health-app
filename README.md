@@ -37,6 +37,12 @@ docker compose exec -T api bun run seed
 
 The seed fills all four slots on the current reporting day and adds examples in earlier days and the previous month. Rerunning it adds missing sample slots and preserves existing readings. Use these public credentials with local demo data.
 
+## Screenshots
+
+![Desktop logbook with daily, month-to-date, and previous-month reports](docs/screenshots/logbook-desktop.png)
+
+[Reading form](docs/screenshots/reading-form.png) · [Mobile logbook](docs/screenshots/logbook-mobile.png)
+
 ## Checks
 
 With Vite and Compose running, check the API directly and through the frontend proxy.

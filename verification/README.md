@@ -34,3 +34,21 @@ Alloy 6.2.0 with SAT4J found no counterexamples for the three report assertions.
 The witness includes a reading in each report, a month-to-date reading from before the selected day, and excluded readings from an older month, a later date, and another user. The model treats month boundaries as inputs. The TypeScript and PostgreSQL tests check calendar arithmetic, stored reporting dates, and numeric summaries.
 
 Excluding the selected day from the modeled query produced a `ReportsUseExactlyEligibleRows` counterexample. Shifting the previous-month start one day later in a temporary TypeScript copy caused the boundary tests to fail.
+
+## Release verification
+
+Verified on November 22, 2026 from a clean local clone and an isolated Compose volume. Both migrations applied, the first seed added 14 readings, and the second added zero. Desktop and mobile Chromium checks covered registration, login, add, edit, delete, all three reports, keyboard focus, session restore, and expiry. The API returned `503` while PostgreSQL was stopped and recovered to `200` without an API restart.
+
+All 27 Bun tests, lint, TypeScript checks, and the Vite build passed. In the coverage run, the auth middleware and both report modules had 100% line coverage, the readings router had 97.54%, and the reading form had 91.77%. Browser checks covered the main application flow. Additional automated cases could exercise UI network failures and the API's generic error handling.
+
+The access-control checks used two accounts and verified that reads and mutations are scoped to the signed-in user. Sign-up ignored a client-supplied reporting timezone, and the protected routes rejected invalid or expired tokens. Service logs from the run were checked for the exercised passwords, bcrypt hashes, and bearer tokens.
+
+### Local report load
+
+Run `bun verification/report-load.ts` after starting Compose on its default ports and seeding the demo. The script signs in once and reads the same seeded report with eight concurrent workers for 30 seconds. It validates the daily count on every response.
+
+| Environment                                               | Requests | Errors |     p50 |     p95 |     p99 |
+| --------------------------------------------------------- | -------: | -----: | ------: | ------: | ------: |
+| Local Apple Silicon, Bun 1.4.4, PostgreSQL 17 in OrbStack |  241,980 |      0 | 0.86 ms | 1.84 ms | 2.94 ms |
+
+These are client-observed timings for one seeded account over local loopback.
