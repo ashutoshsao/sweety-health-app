@@ -6,7 +6,7 @@ A patient can register, sign in, log up to four readings on a day, and review al
 
 ## Screens and interactions
 
-- Provide sign-in and sign-up forms. Sign-up collects name, email, and password and sends the device's IANA timezone as the account reporting timezone. After registration, return to sign-in with the email filled in. Show server validation next to the form and keep entered fields when a request fails.
+- Provide sign-in and sign-up forms. Sign-up sends name, email, and password. The server assigns the account's reporting timezone at runtime and returns it in the profile. After registration, return to sign-in with the email filled in. Show server validation next to the form and keep entered fields when a request fails.
 - Keep the one-hour bearer token in session storage so refreshing the tab restores the session through `/api/auth/me`. Signing out or receiving `401` on an authenticated request clears it and returns to sign-in. If session restoration fails because the server is unavailable, offer retry. Passwords stay out of browser storage.
 - Open the logbook on today in the account's reporting timezone. One date control drives the four slots and all report summaries. Provide previous day, next day, and Today shortcuts. Allow dates up through today. Load the selected day's data from `/api/reports` and keep only the currently selected response visible. Show a retry action for a failed load.
 - Give every empty slot an **Add reading** action. Filled slots show the value in mg/dl, the device-local reading time, and **Edit** and **Delete** actions. Once all four slots are filled, show “You can add only 4 readings per day.”
@@ -17,7 +17,7 @@ A patient can register, sign in, log up to four readings on a day, and review al
 ## Local time and reporting date
 
 - Format reading times in the device's timezone. Render the device-local date alongside the time when it differs from the reporting date. Display the account's reporting timezone beside the logbook date so patients can see which calendar groups their readings.
-- Interpret form dates and times in the device's timezone and send a full ISO 8601 timestamp. When starting a reading on today's reporting date, default to the current local time. For a past reporting day, start with noon in the account's reporting timezone converted to device-local time. Show the destination reporting date in the form when it differs from the local date entered.
+- Interpret form dates and times in the device's timezone and send a full ISO 8601 timestamp describing the patient-entered instant. The server validates that instant, derives the reporting date using its stored timezone, and generates the returned UTC timestamp with `Z`. When starting a reading on today's reporting date, default to the current local time. For a past reporting day, start with noon in the account's reporting timezone converted to device-local time. Show the destination reporting date in the form when it differs from the local date entered.
 - Use the browser Temporal polyfill for date and timezone conversion. Reject a local time skipped by a daylight saving transition. If a manually entered time occurs twice, use the first occurrence. When editing an existing reading, preserve its exact timestamp if the local date and time field stays unchanged. [Temporal timezone disambiguation](https://tc39.es/proposal-temporal/docs/timezone.html)
 
 ## Visual direction

@@ -36,6 +36,7 @@ Both requests should return `{"status":"ok"}`. To check recovery, run `docker co
 
 ```sh
 bun run --filter api test
+bun run --filter web test
 bun run lint
 bun run check-types
 bun run build
@@ -56,4 +57,4 @@ The [formal verification instructions](verification/README.md) show how to rerun
 
 ## Notes
 
-- The account's reporting timezone groups readings into calendar days. A reading's timestamp is stored as an instant so the frontend can display its time in the device's local timezone.
+- The API assigns the reporting timezone from its runtime configuration when an account is created. Docker Compose uses `REPORTING_TIME_ZONE=UTC` by default. Accounts keep that setting for stable historical reports. Readings use PostgreSQL `timestamptz` and UTC on API responses. The UI displays the device's local time. [PostgreSQL date/time types](https://www.postgresql.org/docs/17/datatype-datetime.html)
