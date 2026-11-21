@@ -1,6 +1,6 @@
 # Sweety main plan
 
-Sweety lets a patient log up to four blood glucose readings per day and view daily, month-to-date, and previous-month reports. The Kenpath submission deadline is Tuesday, November 24, 2026.
+Sweety lets a patient log up to four blood glucose readings per day and view daily, month-to-date, and previous-month reports. The Kenpath submission deadline is Tuesday, November 24, 2026. See the [Kenpath assignment brief](assignment.md) for the requirements, validation messages, report examples, and submission instructions.
 
 ## Working agreement
 
