@@ -1,5 +1,6 @@
 import { once } from "node:events";
 import { expect, test } from "bun:test";
+import { Router } from "express";
 import { createApp } from "./app";
 
 test("health reports database outages and recovers without exposing connection details", async () => {
@@ -7,7 +8,7 @@ test("health reports database outages and recovers without exposing connection d
   const app = createApp(async () => {
     if (!databaseAvailable)
       throw new Error("internal database connection error");
-  });
+  }, Router());
   const server = app.listen(0, "127.0.0.1");
 
   try {

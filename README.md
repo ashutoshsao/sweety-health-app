@@ -9,11 +9,17 @@ Install Bun 1.4.4 and Docker with Compose. Start the Docker engine before runnin
 ```sh
 bun install --frozen-lockfile
 cp .env.example .env
-docker compose up --build -d
+bun -e 'import { randomBytes } from "node:crypto"; console.log(randomBytes(32).toString("hex"))'
+```
+
+Paste the generated value into `JWT_SECRET` in `.env`. Then start the services.
+
+```sh
+docker compose up --build -d --wait
 bun run dev
 ```
 
-Open `http://localhost:5173`. Vite forwards `/api` requests to Express on `localhost:3001`. Compose starts the API and PostgreSQL and retains the database in a named volume. The default host database connection is `postgresql://postgres:postgres@localhost:5432/sweety`. Settings are listed in `.env.example`. If you change `API_PORT`, update `API_PROXY_TARGET` to match it.
+Open `http://localhost:5173`. Vite forwards `/api` requests to Express on `localhost:3001`. Compose starts PostgreSQL, applies pending Prisma migrations, and starts the API. PostgreSQL retains data in a named volume. The default host database connection is `postgresql://postgres:postgres@localhost:5432/sweety`. Settings are listed in `.env.example`. If you change `API_PORT`, update `API_PROXY_TARGET` to match it.
 
 Stop Vite with Ctrl+C and stop the containers with `docker compose down`.
 
@@ -33,4 +39,15 @@ bun run --filter api test
 bun run lint
 bun run check-types
 bun run build
+```
+
+Run the integration suite against a separate PostgreSQL database. Create `sweety_test` once per database volume. These commands use the default local credentials, and the suite cleans up the account rows it creates.
+
+```sh
+docker compose up -d --wait db
+docker compose exec -T db createdb -U postgres sweety_test
+export TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sweety_test
+DATABASE_URL="$TEST_DATABASE_URL" bun run --filter api prisma:deploy
+bun run --filter api prisma:generate
+bun run --filter api test:integration
 ```

@@ -11,4 +11,4 @@ WORKDIR /app/apps/api
 RUN bun run prisma:generate
 
 EXPOSE 3001
-CMD ["bun", "run", "start"]
+CMD ["sh", "-c", "bun run prisma:deploy && exec bun run start"]
