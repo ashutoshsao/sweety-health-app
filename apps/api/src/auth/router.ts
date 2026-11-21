@@ -1,6 +1,5 @@
 import express from "express";
 import jwt from "jsonwebtoken";
-import { isReportingTimeZone } from "../dates";
 import { Prisma, type PrismaClient } from "../generated/prisma/client";
 import { noStore, parseJson } from "../http";
 import { authenticationRequired, requireAuth } from "./require-auth";
@@ -41,12 +40,16 @@ function isPassword(value: unknown): value is string {
   );
 }
 
-export function createAuthRouter(prisma: PrismaClient, secret: string) {
+export function createAuthRouter(
+  prisma: PrismaClient,
+  secret: string,
+  reportingTimeZone = "UTC",
+) {
   const router = express.Router();
   router.use(noStore);
 
   router.post("/signup", parseJson, async (request, response) => {
-    const { name, email, password, timeZone = "UTC" } = request.body ?? {};
+    const { name, email, password } = request.body ?? {};
     const trimmedName = typeof name === "string" ? name.trim() : "";
     const normalizedEmail = normalizeEmail(email);
 
@@ -71,11 +74,6 @@ export function createAuthRouter(prisma: PrismaClient, secret: string) {
       });
       return;
     }
-    if (!isReportingTimeZone(timeZone)) {
-      response.status(400).json({ error: "Enter a valid IANA timezone." });
-      return;
-    }
-
     const passwordHash = await Bun.password.hash(password, {
       algorithm: "bcrypt",
       cost: 10,
@@ -86,7 +84,7 @@ export function createAuthRouter(prisma: PrismaClient, secret: string) {
           name: trimmedName,
           email: normalizedEmail,
           passwordHash,
-          timeZone,
+          timeZone: reportingTimeZone,
         },
         select: publicUser,
       });

@@ -32,7 +32,7 @@ const secret = crypto.randomUUID();
 const emailPrefix = `${crypto.randomUUID()}-`;
 const app = createApp(
   () => prisma.$queryRaw`SELECT 1`,
-  createAuthRouter(prisma, secret),
+  createAuthRouter(prisma, secret, "Asia/Kolkata"),
   createReadingsRouter(prisma, secret),
 );
 let server: ReturnType<typeof app.listen> | undefined;
@@ -51,14 +51,13 @@ function call(path: string, method = "GET", token?: string, body?: object) {
   });
 }
 
-async function register(name: string, timeZone: string) {
+async function register(name: string) {
   const email = `${emailPrefix}${name}@example.com`;
   const password = "test passphrase";
   const signup = await call("auth/signup", "POST", undefined, {
     name,
     email,
     password,
-    timeZone,
   });
   expect(signup.status).toBe(201);
   const login = await call("auth/login", "POST", undefined, {
@@ -77,9 +76,15 @@ beforeAll(async () => {
     throw new Error("Expected a TCP address");
   baseUrl = `http://127.0.0.1:${address.port}/api`;
   [patient, other] = await Promise.all([
-    register("patient", "Asia/Kolkata"),
-    register("other", "UTC"),
+    register("patient"),
+    register("other"),
   ]);
+  await prisma.user.update({
+    where: { id: other.user.id },
+    data: { timeZone: "UTC" },
+  });
+  const profile = await call("auth/me", "GET", other.token);
+  other.user = ((await profile.json()) as { user: Patient }).user;
 });
 
 afterAll(async () => {
