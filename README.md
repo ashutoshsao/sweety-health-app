@@ -23,6 +23,20 @@ Open `http://localhost:5173`. Vite forwards `/api` requests to Express on `local
 
 Stop Vite with Ctrl+C and stop the containers with `docker compose down`.
 
+## Demo account
+
+With Compose running, seed the demo and sign in at `http://localhost:5173`.
+
+```sh
+docker compose exec -T api bun run seed
+```
+
+| Email                         | Password           |
+| ----------------------------- | ------------------ |
+| `demo@sweety.example.invalid` | `sweety-demo-2026` |
+
+The seed fills all four slots on the current reporting day and adds examples in earlier days and the previous month. Rerunning it adds missing sample slots and preserves existing readings. Use these public credentials with local demo data.
+
 ## Checks
 
 With Vite and Compose running, check the API directly and through the frontend proxy.
@@ -58,3 +72,5 @@ The [formal verification instructions](verification/README.md) show how to rerun
 ## Notes
 
 - The API assigns the reporting timezone from its runtime configuration when an account is created. Docker Compose uses `REPORTING_TIME_ZONE=UTC` by default. Accounts keep that setting for stable historical reports. Readings use PostgreSQL `timestamptz` and UTC on API responses. The UI displays the device's local time. [PostgreSQL date/time types](https://www.postgresql.org/docs/17/datatype-datetime.html)
+- The reports use calendar days in the account timezone. “Previous month” means the full calendar month before the selected date's month.
+- With more time I'd add a reading trend chart and expand automated end-to-end coverage across browsers.
