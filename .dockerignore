@@ -1,0 +1,7 @@
+.git
+.env*
+.turbo
+**/node_modules
+**/dist
+**/coverage
+apps/api/src/generated
