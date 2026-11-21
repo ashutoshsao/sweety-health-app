@@ -22,6 +22,9 @@ const prisma = new PrismaClient({
 const secret = crypto.randomUUID();
 const emailPrefix = `${crypto.randomUUID()}-`;
 const password = " demo passphrase ";
+type UserResponse = {
+  user: { id: string; name: string; email: string; timeZone: string };
+};
 const app = createApp(
   () => prisma.$queryRaw`SELECT 1`,
   createAuthRouter(prisma, secret),
@@ -72,8 +75,13 @@ test("registers, stores bcrypt, logs in, and returns only the signed-in user's p
   });
   expect(signup.status).toBe(201);
   expect(signup.headers.get("cache-control")).toBe("no-store");
-  const { user } = await signup.json();
-  expect(user).toEqual({ id: expect.any(String), name: "Test Patient", email });
+  const { user } = (await signup.json()) as UserResponse;
+  expect(user).toEqual({
+    id: expect.any(String),
+    name: "Test Patient",
+    email,
+    timeZone: "UTC",
+  });
 
   const account = await prisma.user.findUniqueOrThrow({
     where: { id: user.id },
@@ -89,7 +97,7 @@ test("registers, stores bcrypt, logs in, and returns only the signed-in user's p
   });
   expect(login.status).toBe(200);
   expect(login.headers.get("cache-control")).toBe("no-store");
-  const payload = await login.json();
+  const payload = (await login.json()) as UserResponse & { token: string };
   expect(payload).toEqual({ token: expect.any(String), user });
   const claims = jwt.verify(payload.token, secret, { algorithms: ["HS256"] });
   if (
@@ -133,6 +141,8 @@ test("validates JSON, fields, and the bcrypt byte limit", async () => {
     { ...valid, email: "patient..record@example.com" },
     { ...valid, name: 123 },
     { ...valid, name: "Patient\0Record" },
+    { ...valid, timeZone: "+05:30" },
+    { ...valid, timeZone: "Mars/Settlement" },
     { ...valid, password: "short" },
     { ...valid, password: "😀".repeat(19) },
   ]) {
@@ -180,7 +190,7 @@ test("rejects missing, expired, invalid, and deleted-account credentials", async
   const email = `${emailPrefix}deleted@example.com`;
   const signup = await post("signup", { name: "Patient", email, password });
   expect(signup.status).toBe(201);
-  const { user } = await signup.json();
+  const { user } = (await signup.json()) as UserResponse;
   const subject = user.id;
   const tokens = [
     undefined,

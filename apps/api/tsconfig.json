@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2023",
+    "lib": ["ES2023", "ESNext.Temporal"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "types": ["bun"],

@@ -1,7 +1,12 @@
 import express from "express";
 import type { Router } from "express";
+import { handleRequestError } from "./http";
 
-export function createApp(checkDatabase: () => Promise<unknown>, auth: Router) {
+export function createApp(
+  checkDatabase: () => Promise<unknown>,
+  auth: Router,
+  readings?: Router,
+) {
   const app = express();
   app.disable("x-powered-by");
 
@@ -15,6 +20,8 @@ export function createApp(checkDatabase: () => Promise<unknown>, auth: Router) {
   });
 
   app.use("/api/auth", auth);
+  if (readings) app.use("/api/readings", readings);
+  app.use(handleRequestError);
 
   return app;
 }

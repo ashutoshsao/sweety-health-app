@@ -51,3 +51,9 @@ DATABASE_URL="$TEST_DATABASE_URL" bun run --filter api prisma:deploy
 bun run --filter api prisma:generate
 bun run --filter api test:integration
 ```
+
+The [reading verification instructions](verification/README.md) show how to rerun the Alloy model checks.
+
+## Notes
+
+- The account's reporting timezone groups readings into calendar days. A reading's timestamp is stored as an instant so the frontend can display its time in the device's local timezone.

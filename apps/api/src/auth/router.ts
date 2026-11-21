@@ -1,10 +1,16 @@
 import express from "express";
-import type { ErrorRequestHandler } from "express";
 import jwt from "jsonwebtoken";
+import { isReportingTimeZone } from "../dates";
 import { Prisma, type PrismaClient } from "../generated/prisma/client";
+import { noStore, parseJson } from "../http";
 import { authenticationRequired, requireAuth } from "./require-auth";
 
-const publicUser = { id: true, name: true, email: true } as const;
+const publicUser = {
+  id: true,
+  name: true,
+  email: true,
+  timeZone: true,
+} as const;
 const invalidCredentials = { error: "Email or password is incorrect." };
 const emailLocalPart =
   /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*$/;
@@ -35,41 +41,12 @@ function isPassword(value: unknown): value is string {
   );
 }
 
-const handleAuthError: ErrorRequestHandler = (
-  error,
-  _request,
-  response,
-  next,
-) => {
-  if (response.headersSent) {
-    next(error);
-    return;
-  }
-
-  if (error?.type === "entity.too.large") {
-    response.status(413).json({ error: "Request body is too large." });
-    return;
-  }
-  if (error?.type === "entity.parse.failed") {
-    response.status(400).json({ error: "Please send valid JSON." });
-    return;
-  }
-
-  response
-    .status(500)
-    .json({ error: "Something went wrong. Please try again." });
-};
-
 export function createAuthRouter(prisma: PrismaClient, secret: string) {
   const router = express.Router();
-  router.use((_request, response, next) => {
-    response.set("Cache-Control", "no-store");
-    next();
-  });
-  const parseJson = express.json({ limit: "8kb" });
+  router.use(noStore);
 
   router.post("/signup", parseJson, async (request, response) => {
-    const { name, email, password } = request.body ?? {};
+    const { name, email, password, timeZone = "UTC" } = request.body ?? {};
     const trimmedName = typeof name === "string" ? name.trim() : "";
     const normalizedEmail = normalizeEmail(email);
 
@@ -94,6 +71,10 @@ export function createAuthRouter(prisma: PrismaClient, secret: string) {
       });
       return;
     }
+    if (!isReportingTimeZone(timeZone)) {
+      response.status(400).json({ error: "Enter a valid IANA timezone." });
+      return;
+    }
 
     const passwordHash = await Bun.password.hash(password, {
       algorithm: "bcrypt",
@@ -101,7 +82,12 @@ export function createAuthRouter(prisma: PrismaClient, secret: string) {
     });
     try {
       const user = await prisma.user.create({
-        data: { name: trimmedName, email: normalizedEmail, passwordHash },
+        data: {
+          name: trimmedName,
+          email: normalizedEmail,
+          passwordHash,
+          timeZone,
+        },
         select: publicUser,
       });
       response.status(201).json({ user });
@@ -164,6 +150,5 @@ export function createAuthRouter(prisma: PrismaClient, secret: string) {
     response.json({ user });
   });
 
-  router.use(handleAuthError);
   return router;
 }

@@ -1,7 +1,6 @@
 import type { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
-
-const uuid = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i;
+import { isUuid } from "../http";
 
 export const authenticationRequired = { error: "Please sign in." };
 
@@ -19,8 +18,7 @@ export function requireAuth(secret: string): RequestHandler {
       if (
         typeof claims === "string" ||
         typeof claims.exp !== "number" ||
-        typeof claims.sub !== "string" ||
-        !uuid.test(claims.sub)
+        !isUuid(claims.sub)
       ) {
         response.status(401).json(authenticationRequired);
         return;
