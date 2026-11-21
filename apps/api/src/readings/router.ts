@@ -7,6 +7,7 @@ import {
   type PrismaClient,
 } from "../generated/prisma/client";
 import { isUuid, noStore, parseJson, RequestError } from "../http";
+import { serializeReading } from "./serialize-reading";
 
 const slotLabels: Record<ReadingSlot, string> = {
   MORNING_FASTING: "Morning (fasting)",
@@ -34,28 +35,6 @@ function parseValue(value: unknown): number {
     throw new RequestError(400, "Value must be between 40 and 600 mg/dl.");
   }
   return value;
-}
-
-function serializeReading({
-  id,
-  date,
-  recordedAt,
-  slot,
-  value,
-}: {
-  id: string;
-  date: Date;
-  recordedAt: Date;
-  slot: ReadingSlot;
-  value: number;
-}) {
-  return {
-    id,
-    recordedAt: recordedAt.toISOString(),
-    date: date.toISOString().slice(0, 10),
-    slot,
-    value,
-  };
 }
 
 function isPrismaError(error: unknown, code: string) {

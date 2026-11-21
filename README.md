@@ -52,7 +52,7 @@ bun run --filter api prisma:generate
 bun run --filter api test:integration
 ```
 
-The [reading verification instructions](verification/README.md) show how to rerun the Alloy model checks.
+The [formal verification instructions](verification/README.md) show how to rerun the Alloy checks for readings and reports.
 
 ## Notes
 

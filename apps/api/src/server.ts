@@ -3,6 +3,7 @@ import { createApp } from "./app";
 import { createAuthRouter } from "./auth/router";
 import { PrismaClient } from "./generated/prisma/client";
 import { createReadingsRouter } from "./readings/router";
+import { createReportsRouter } from "./reports/router";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -23,6 +24,7 @@ const app = createApp(
   () => prisma.$queryRaw`SELECT 1`,
   createAuthRouter(prisma, jwtSecret),
   createReadingsRouter(prisma, jwtSecret),
+  createReportsRouter(prisma, jwtSecret),
 );
 
 app.listen(3001, "0.0.0.0", () =>

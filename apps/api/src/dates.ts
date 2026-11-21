@@ -22,6 +22,10 @@ export function parseCalendarDate(value: unknown): Date | undefined {
   }
 }
 
+export function formatCalendarDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
 export function parseReadingTime(
   value: unknown,
   timeZone: string,
